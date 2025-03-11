@@ -15,29 +15,29 @@ from sklearn import preprocessing
 from scipy.linalg import fractional_matrix_power
 from scipy import signal
 
-def prepro(X, subject):
+def prepro(X, subject): #定义预处理函数
     filX = filter(X, subject)
     return filX
 
-def filter(X, subject):
+def filter(X, subject): #滤波函数
     # if 'Dog' not in subject:
     #     X = signal.resample(X, 400, axis=-1)
-    X = mne.filter.notch_filter(X, Fs=X.shape[-1], freqs=50, n_jobs=100)
-    X = mne.filter.filter_data(X, sfreq=X.shape[-1], l_freq=0.5, h_freq=50, n_jobs=100)  # n_jobs可以极大提高处理速度
+    X = mne.filter.notch_filter(X, Fs=X.shape[-1], freqs=50, n_jobs=100) #去除50Hz的工频干扰
+    X = mne.filter.filter_data(X, sfreq=X.shape[-1], l_freq=0.5, h_freq=50, n_jobs=100)  # n_jobs可以极大提高处理速度，带通滤波，0.5Hz-50Hz
     if 'Patient_1' in subject:
-        X = mne.filter.resample(X, down=1.25)
+        X = mne.filter.resample(X, down=1.25) #对数据进行重采样 ，down下采样因子
     elif 'Dog' not in subject and 'Patient_1' not in subject:
         X = mne.filter.resample(X, down=12.5)
     return X
 
 
-def standard_normalize(x_train):
+def standard_normalize(x_train): #标准化
     mean, std = np.mean(x_train), np.std(x_train)
     x_train = (x_train - mean) / std
     return x_train
 
 
-def EA(x):
+def EA(x): #EA欧式对齐，计算协方差矩阵和其逆平方根，调整数据的特征值。EA处理可以增强数据的特征提高模型的分类性能
     """
     Parameters
     ----------
@@ -62,9 +62,9 @@ def EA(x):
 
 def load_data(root_path, subjects, norm):
     for subject in subjects:
-        inter_data = LoadInterictalDataTask(subject, root_path)
+        inter_data = LoadInterictalDataTask(subject, root_path)#加载interictal数据
         inter_labels = np.zeros(inter_data.shape[0])
-        ictal_data = LoadIctalDataTask(subject, root_path)
+        ictal_data = LoadIctalDataTask(subject, root_path) #加载ictal数据
         ictal_labels = np.ones(ictal_data.shape[0])
         # print(subject)
         print(inter_data.shape)
@@ -113,7 +113,7 @@ def LoadInterictalDataTask(subject, path):
     return all_file
 
 
-def merge_data(root_path, dogs, norm):
+def merge_data(root_path, dogs, norm): #将多个主题的数据合并为一个文件
     dog_data = []
     dog_labels = []
     for subject in dogs:
